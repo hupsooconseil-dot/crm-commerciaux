@@ -1,0 +1,332 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../app/generated/prisma"
+}
+
+datasource db {
+  provider = "sqlite"
+}
+
+model User {
+  id         String      @id @default(cuid())
+  email      String      @unique
+  password   String
+  role       String      @default("COMMERCIAL")
+  createdAt  DateTime    @default(now())
+  updatedAt  DateTime    @updatedAt
+  commercial Commercial?
+}
+
+model Commercial {
+  id                String               @id @default(cuid())
+  userId            String               @unique
+  user              User                 @relation(fields: [userId], references: [id], onDelete: Cascade)
+  nom               String
+  prenom            String
+  telephone         String?
+  region            String?
+  secteur           String?
+  dateDebut         DateTime?
+  dateFin           DateTime?
+  statut            String               @default("ACTIF")
+  numeroRSAC        String?
+  dateValiditeRSAC  DateTime?
+  assureurRCPro     String?
+  dateValiditeRCPro DateTime?
+  objectifMensuel   Float?               @default(0)
+  objectifAnnuel    Float?               @default(0)
+  parrainId         String?
+  parrain           Commercial?          @relation("Parrainage", fields: [parrainId], references: [id])
+  filleuls          Commercial[]         @relation("Parrainage")
+  equipeId          String?
+  equipe            Equipe?              @relation("EquipeMembres", fields: [equipeId], references: [id])
+  equipeChef        Equipe[]             @relation("ChefEquipe")
+  reseauChef        Reseau[]             @relation("ChefReseau")
+  prospects         Prospect[]
+  opportunites      Opportunite[]
+  crv               CRV[]
+  commissions       Commission[]
+  documents         Document[]
+  formations        FormationCommercial[]
+  alertes           Alerte[]
+  contrats          Contrat[]
+  factures          Facture[]
+  createdAt         DateTime             @default(now())
+  updatedAt         DateTime             @updatedAt
+}
+
+model Reseau {
+  id           String       @id @default(cuid())
+  nom          String
+  region       String?
+  chefReseauId String?
+  chefReseau   Commercial?  @relation("ChefReseau", fields: [chefReseauId], references: [id])
+  equipes      Equipe[]
+  createdAt    DateTime     @default(now())
+  updatedAt    DateTime     @updatedAt
+}
+
+model Equipe {
+  id           String       @id @default(cuid())
+  nom          String
+  reseauId     String?
+  reseau       Reseau?      @relation(fields: [reseauId], references: [id])
+  chefEquipeId String?
+  chefEquipe   Commercial?  @relation("ChefEquipe", fields: [chefEquipeId], references: [id])
+  membres      Commercial[] @relation("EquipeMembres")
+  createdAt    DateTime     @default(now())
+  updatedAt    DateTime     @updatedAt
+}
+
+model Prospect {
+  id              String        @id @default(cuid())
+  commercialId    String
+  commercial      Commercial    @relation(fields: [commercialId], references: [id])
+  raisonSociale   String
+  contactNom      String?
+  contactPrenom   String?
+  email           String?
+  telephone       String?
+  adresse         String?
+  codePostal      String?
+  ville           String?
+  secteurActivite String?
+  statut          String        @default("NOUVEAU")
+  source          String?
+  notes           String?
+  dateContact     DateTime?
+  dateRdv         DateTime?
+  dateDevis       DateTime?
+  opportunites    Opportunite[]
+  crv             CRV[]
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+}
+
+model Opportunite {
+  id           String      @id @default(cuid())
+  commercialId String
+  commercial   Commercial  @relation(fields: [commercialId], references: [id])
+  prospectId   String?
+  prospect     Prospect?   @relation(fields: [prospectId], references: [id])
+  titre        String
+  description  String?
+  montantEstime Float      @default(0)
+  probabilite  Int         @default(0)
+  statut       String      @default("EN_COURS")
+  etape        String      @default("PROSPECTION")
+  dateCreation DateTime    @default(now())
+  datePrevClot DateTime?
+  dateClot     DateTime?
+  nbRelances   Int         @default(0)
+  contrats     Contrat[]
+  crv          CRV[]
+  createdAt    DateTime    @default(now())
+  updatedAt    DateTime    @updatedAt
+}
+
+model Contrat {
+  id              String       @id @default(cuid())
+  commercialId    String
+  commercial      Commercial   @relation(fields: [commercialId], references: [id])
+  opportuniteId   String?
+  opportunite     Opportunite? @relation(fields: [opportuniteId], references: [id])
+  reference       String       @unique
+  clientNom       String
+  clientEmail     String?
+  clientTelephone String?
+  produit         String?
+  montant         Float        @default(0)
+  statut          String       @default("ACTIF")
+  dateSignature   DateTime?
+  dateDebut       DateTime?
+  dateFin         DateTime?
+  tauxCommission  Float?       @default(0)
+  commissions     Commission[]
+  createdAt       DateTime     @default(now())
+  updatedAt       DateTime     @updatedAt
+}
+
+model CRV {
+  id            String       @id @default(cuid())
+  commercialId  String
+  commercial    Commercial   @relation(fields: [commercialId], references: [id])
+  prospectId    String?
+  prospect      Prospect?    @relation(fields: [prospectId], references: [id])
+  opportuniteId String?
+  opportunite   Opportunite? @relation(fields: [opportuniteId], references: [id])
+  dateVisite    DateTime
+  typeContact   String       @default("VISITE")
+  duree         Int?
+  objectif      String?
+  compteRendu   String
+  actionsNext   String?
+  dateRelance   DateTime?
+  kilometrage   Float?
+  coordonnees   String?
+  qualite       Int?         @default(3)
+  createdAt     DateTime     @default(now())
+  updatedAt     DateTime     @updatedAt
+}
+
+model Commission {
+  id                String     @id @default(cuid())
+  commercialId      String
+  commercial        Commercial @relation(fields: [commercialId], references: [id])
+  contratId         String?
+  contrat           Contrat?   @relation(fields: [contratId], references: [id])
+  periode           String
+  montantBase       Float      @default(0)
+  taux              Float      @default(0)
+  montantCommission Float      @default(0)
+  statut            String     @default("EN_ATTENTE")
+  dateValidation    DateTime?
+  datePaiement      DateTime?
+  notes             String?
+  createdAt         DateTime   @default(now())
+  updatedAt         DateTime   @updatedAt
+}
+
+model Document {
+  id             String     @id @default(cuid())
+  commercialId   String
+  commercial     Commercial @relation(fields: [commercialId], references: [id])
+  type           String
+  nom            String
+  description    String?
+  fichierUrl     String?
+  statut         String     @default("VALIDE")
+  dateDocument   DateTime?
+  dateExpiration DateTime?
+  dateReception  DateTime?
+  createdAt      DateTime   @default(now())
+  updatedAt      DateTime   @updatedAt
+}
+
+model Formation {
+  id             String               @id @default(cuid())
+  titre          String
+  description    String?
+  type           String               @default("E_LEARNING")
+  categorie      String?
+  contenu        String?
+  duree          Int?
+  niveau         String               @default("DEBUTANT")
+  estObligatoire Boolean              @default(false)
+  modules        ModuleFormation[]
+  commerciaux    FormationCommercial[]
+  createdAt      DateTime             @default(now())
+  updatedAt      DateTime             @updatedAt
+}
+
+model ModuleFormation {
+  id          String          @id @default(cuid())
+  formationId String
+  formation   Formation       @relation(fields: [formationId], references: [id], onDelete: Cascade)
+  titre       String
+  contenu     String?
+  ordre       Int             @default(0)
+  duree       Int?
+  type        String          @default("TEXTE")
+  questions   QuizQuestion[]
+  createdAt   DateTime        @default(now())
+}
+
+model QuizQuestion {
+  id           String          @id @default(cuid())
+  moduleId     String
+  module       ModuleFormation @relation(fields: [moduleId], references: [id], onDelete: Cascade)
+  question     String
+  choix        String
+  bonneReponse Int
+  explication  String?
+  ordre        Int             @default(0)
+}
+
+model FormationCommercial {
+  id           String     @id @default(cuid())
+  commercialId String
+  commercial   Commercial @relation(fields: [commercialId], references: [id])
+  formationId  String
+  formation    Formation  @relation(fields: [formationId], references: [id])
+  statut       String     @default("NON_COMMENCE")
+  progression  Int        @default(0)
+  score        Float?
+  dateDebut    DateTime?
+  dateFin      DateTime?
+  createdAt    DateTime   @default(now())
+  updatedAt    DateTime   @updatedAt
+
+  @@unique([commercialId, formationId])
+}
+
+model Alerte {
+  id           String      @id @default(cuid())
+  commercialId String?
+  commercial   Commercial? @relation(fields: [commercialId], references: [id])
+  type         String
+  titre        String
+  message      String
+  priorite     String      @default("NORMALE")
+  estLue       Boolean     @default(false)
+  dateLecture  DateTime?
+  createdAt    DateTime    @default(now())
+}
+
+model RapportHebdomadaire {
+  id           String   @id @default(cuid())
+  commercialId String
+  semaine      String
+  nbProspects  Int      @default(0)
+  nbRdv        Int      @default(0)
+  nbDevis      Int      @default(0)
+  nbContrats   Int      @default(0)
+  caRealise    Float    @default(0)
+  kilometrage  Float    @default(0)
+  commentaire  String?
+  createdAt    DateTime @default(now())
+}
+
+model Facture {
+  id             String      @id @default(cuid())
+  commercialId   String
+  commercial     Commercial  @relation(fields: [commercialId], references: [id])
+  numero         String      @unique
+  montantHT      Float       @default(0)
+  tva            Float       @default(20)
+  montantTTC     Float       @default(0)
+  statut         String      @default("EN_ATTENTE")
+  fichierUrl     String?
+  notes          String?
+  periode        String?
+  dateFacture    DateTime?
+  dateTraitement DateTime?
+  createdAt      DateTime    @default(now())
+  updatedAt      DateTime    @updatedAt
+}
+
+model DocumentLibrairie {
+  id          String   @id @default(cuid())
+  nom         String
+  description String?
+  categorie   String   @default("GENERAL")
+  fichierUrl  String?
+  taille      String?
+  mimeType    String?
+  uploadePar  String?
+  estPublic   Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model OutilVente {
+  id           String   @id @default(cuid())
+  titre        String
+  description  String?
+  categorie    String   @default("PRESENTATION")
+  fichierUrl   String?
+  ordre        Int      @default(0)
+  actif        Boolean  @default(true)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+}
