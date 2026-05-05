@@ -13,6 +13,10 @@ export default function CRVPage() {
   const session = useSession()
   const [crvs, setCrvs] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
+  const [search, setSearch] = useState('')
+  const [filterType, setFilterType] = useState('')
+  const [dateFrom, setDateFrom] = useState('')
+  const [dateTo, setDateTo] = useState('')
   const [showForm, setShowForm] = useState(false)
   const [selected, setSelected] = useState<any | null>(null)
   const [form, setForm] = useState({
@@ -24,12 +28,17 @@ export default function CRVPage() {
   const [saving, setSaving] = useState(false)
 
   const load = () => {
-    fetch('/api/crv')
+    const params = new URLSearchParams()
+    if (search) params.set('search', search)
+    if (filterType) params.set('type', filterType)
+    if (dateFrom) params.set('dateFrom', dateFrom)
+    if (dateTo) params.set('dateTo', dateTo)
+    fetch(`/api/crv?${params}`)
       .then(r => r.json())
       .then(d => { setCrvs(d); setLoading(false) })
   }
 
-  useEffect(() => { load() }, [])
+  useEffect(() => { load() }, [search, filterType, dateFrom, dateTo])
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
@@ -75,6 +84,26 @@ export default function CRVPage() {
           className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg text-sm font-medium hover:bg-blue-700">
           + Nouveau CRV
         </button>
+      </div>
+
+      <div className="flex flex-wrap gap-3 mb-5">
+        <input type="text" placeholder="Rechercher..." value={search} onChange={e => setSearch(e.target.value)}
+          className="flex-1 min-w-48 px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" />
+        <select value={filterType} onChange={e => setFilterType(e.target.value)}
+          className="px-3 py-2 border border-gray-200 rounded-lg text-sm bg-white focus:outline-none focus:ring-2 focus:ring-blue-500">
+          <option value="">Tous les types</option>
+          {TYPES.map(t => <option key={t} value={t}>{TYPE_ICONS[t]} {t}</option>)}
+        </select>
+        <input type="date" value={dateFrom} onChange={e => setDateFrom(e.target.value)}
+          className="px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" />
+        <input type="date" value={dateTo} onChange={e => setDateTo(e.target.value)}
+          className="px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" />
+        {(search || filterType || dateFrom || dateTo) && (
+          <button onClick={() => { setSearch(''); setFilterType(''); setDateFrom(''); setDateTo('') }}
+            className="px-3 py-2 text-sm text-gray-500 hover:text-gray-700 border border-gray-200 rounded-lg">
+            Réinitialiser
+          </button>
+        )}
       </div>
 
       <div className="space-y-3">

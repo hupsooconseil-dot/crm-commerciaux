@@ -7,8 +7,26 @@ export async function GET(req: NextRequest) {
   const { searchParams } = new URL(req.url)
   const cId = searchParams.get('commercialId') || ''
 
+  const typeContact = searchParams.get('type') || ''
+  const dateFrom = searchParams.get('dateFrom') || ''
+  const dateTo = searchParams.get('dateTo') || ''
+  const search = searchParams.get('search') || ''
+
   const where: any = role === 'COMMERCIAL' ? { commercialId: commercialId || undefined } : {}
   if (cId && role !== 'COMMERCIAL') where.commercialId = cId
+  if (typeContact) where.typeContact = typeContact
+  if (dateFrom || dateTo) {
+    where.dateVisite = {}
+    if (dateFrom) where.dateVisite.gte = new Date(dateFrom)
+    if (dateTo) where.dateVisite.lte = new Date(dateTo + 'T23:59:59')
+  }
+  if (search) {
+    where.OR = [
+      { compteRendu: { contains: search } },
+      { objectif: { contains: search } },
+      { prospect: { raisonSociale: { contains: search } } },
+    ]
+  }
 
   const crvs = await prisma.cRV.findMany({
     where,

@@ -7,10 +7,18 @@ export async function GET(req: NextRequest) {
   const { searchParams } = new URL(req.url)
   const statut = searchParams.get('statut') || ''
   const periode = searchParams.get('periode') || ''
+  const search = searchParams.get('search') || ''
 
   const where: any = role === 'COMMERCIAL' ? { commercialId: commercialId || undefined } : {}
   if (statut) where.statut = statut
   if (periode) where.periode = periode
+  if (search) {
+    where.OR = [
+      { contrat: { clientNom: { contains: search } } },
+      { contrat: { reference: { contains: search } } },
+      { periode: { contains: search } },
+    ]
+  }
 
   const commissions = await prisma.commission.findMany({
     where,

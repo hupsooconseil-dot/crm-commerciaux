@@ -143,8 +143,21 @@ model Contrat {
   dateFin         DateTime?
   tauxCommission  Float?       @default(0)
   commissions     Commission[]
+  contratDocs     ContratDocument[]
   createdAt       DateTime     @default(now())
   updatedAt       DateTime     @updatedAt
+}
+
+model ContratDocument {
+  id          String   @id @default(cuid())
+  contratId   String
+  contrat     Contrat  @relation(fields: [contratId], references: [id], onDelete: Cascade)
+  type        String   @default("AUTRE")
+  nom         String
+  description String?
+  fichierUrl  String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
 }
 
 model CRV {

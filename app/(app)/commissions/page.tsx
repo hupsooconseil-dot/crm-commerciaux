@@ -14,6 +14,7 @@ export default function CommissionsPage() {
   const [commissions, setCommissions] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
   const [filterStatut, setFilterStatut] = useState('')
+  const [search, setSearch] = useState('')
   const [showForm, setShowForm] = useState(false)
   const [form, setForm] = useState({
     periode: new Date().toISOString().slice(0, 7),
@@ -24,12 +25,13 @@ export default function CommissionsPage() {
   const load = () => {
     const params = new URLSearchParams()
     if (filterStatut) params.set('statut', filterStatut)
+    if (search) params.set('search', search)
     fetch(`/api/commissions?${params}`)
       .then(r => r.json())
       .then(d => { setCommissions(d); setLoading(false) })
   }
 
-  useEffect(() => { load() }, [filterStatut])
+  useEffect(() => { load() }, [filterStatut, search])
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
@@ -108,9 +110,11 @@ export default function CommissionsPage() {
         </div>
       </div>
 
-      <div className="mb-4">
+      <div className="flex flex-wrap gap-3 mb-4">
+        <input type="text" placeholder="Rechercher client, référence..." value={search} onChange={e => setSearch(e.target.value)}
+          className="flex-1 min-w-48 px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" />
         <select value={filterStatut} onChange={e => setFilterStatut(e.target.value)}
-          className="px-3 py-2 border border-gray-200 rounded-lg text-sm bg-white">
+          className="px-3 py-2 border border-gray-200 rounded-lg text-sm bg-white focus:outline-none focus:ring-2 focus:ring-blue-500">
           <option value="">Tous les statuts</option>
           {STATUTS.map(s => <option key={s} value={s}>{STATUT_LABELS[s]}</option>)}
         </select>

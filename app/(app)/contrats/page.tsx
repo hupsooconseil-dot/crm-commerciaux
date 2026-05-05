@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useState } from 'react'
+import { useRouter } from 'next/navigation'
 import { useSession } from '@/app/components/SessionContext'
 import { formatCurrency, formatDate, statutColor } from '@/app/lib/utils'
 
@@ -18,6 +19,7 @@ const PRODUITS = [
 
 export default function ContratsPage() {
   const session = useSession()
+  const router = useRouter()
   const [contrats, setContrats] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
   const [search, setSearch] = useState('')
@@ -119,7 +121,7 @@ export default function ContratsPage() {
                 <tr><td colSpan={8} className="px-4 py-10 text-center text-gray-400">Aucun contrat</td></tr>
               ) : (
                 contrats.map(c => (
-                  <tr key={c.id} className="hover:bg-gray-50">
+                  <tr key={c.id} className="hover:bg-gray-50 cursor-pointer" onClick={() => router.push(`/contrats/${c.id}`)}>
                     <td className="px-4 py-3 font-mono text-xs text-blue-600 font-semibold">{c.reference}</td>
                     <td className="px-4 py-3">
                       <p className="font-medium text-gray-900">{c.clientNom}</p>
@@ -141,7 +143,7 @@ export default function ContratsPage() {
                       </td>
                     )}
                     <td className="px-4 py-3 text-gray-400 hidden lg:table-cell">{formatDate(c.dateSignature)}</td>
-                    <td className="px-4 py-3">
+                    <td className="px-4 py-3" onClick={e => e.stopPropagation()}>
                       <button onClick={() => deleteContrat(c.id)}
                         className="text-xs px-2 py-1 bg-red-50 text-red-600 rounded hover:bg-red-100 font-medium">✕</button>
                     </td>
