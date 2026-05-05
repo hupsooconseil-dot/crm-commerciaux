@@ -16,14 +16,20 @@ export default function DevisPage() {
   const router = useRouter()
   const [devis, setDevis] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
+  const [error, setError] = useState('')
   const [search, setSearch] = useState('')
   const [filterStatut, setFilterStatut] = useState('')
 
   const load = () => {
+    setLoading(true)
+    setError('')
     const p = new URLSearchParams()
     if (search) p.set('search', search)
     if (filterStatut) p.set('statut', filterStatut)
-    fetch(`/api/devis?${p}`).then(r => r.json()).then(d => { setDevis(d); setLoading(false) })
+    fetch(`/api/devis?${p}`)
+      .then(r => { if (!r.ok) throw new Error(`HTTP ${r.status}`); return r.json() })
+      .then(d => { setDevis(Array.isArray(d) ? d : []); setLoading(false) })
+      .catch(e => { setError(e.message); setLoading(false) })
   }
 
   useEffect(() => { load() }, [search, filterStatut])
@@ -39,6 +45,13 @@ export default function DevisPage() {
   const totalEnvoyes = devis.filter(d => d.statut === 'ENVOYE').length
 
   if (loading) return <div className="p-8 text-center text-gray-500">Chargement...</div>
+  if (error) return (
+    <div className="p-8 text-center">
+      <p className="text-red-500 font-medium mb-2">Erreur de chargement</p>
+      <p className="text-gray-400 text-sm mb-4">{error}</p>
+      <button onClick={load} className="px-4 py-2 bg-blue-600 text-white rounded-lg text-sm hover:bg-blue-700">Réessayer</button>
+    </div>
+  )
 
   return (
     <div className="p-4 md:p-6">
