@@ -53,6 +53,7 @@ interface Devis {
   montantAides: number
   labelAides: string | null
   modeFinancement: string
+  infoDecennale: string | null
   dateDevis: string
   dateValidite: string | null
   notes: string | null
@@ -270,7 +271,6 @@ export default function DevisDetailPage() {
                   { label: 'RGE', color: 'bg-green-100 text-green-800 border-green-300', title: 'Reconnu Garant de l\'Environnement' },
                   { label: 'QUALIBAT', color: 'bg-blue-100 text-blue-800 border-blue-300', title: 'Qualité Bâtiment' },
                   { label: 'IRVE', color: 'bg-purple-100 text-purple-800 border-purple-300', title: 'Borne de recharge véhicule électrique' },
-                  { label: 'Décennale', color: 'bg-red-100 text-red-800 border-red-300', title: 'Assurance Responsabilité Décennale' },
                 ].map(c => (
                   <span key={c.label} title={c.title}
                     className={`text-xs font-bold px-2.5 py-1 rounded-full border ${c.color}`}>
@@ -292,7 +292,7 @@ export default function DevisDetailPage() {
                     <p className="text-sm text-gray-600 mt-1">Commercial : {devis.commercial.prenom} {devis.commercial.nom}</p>
                   )}
                   <div className="flex flex-wrap gap-1 mt-2">
-                    {['QualiPV QB01', 'RGE', 'QUALIBAT', 'Décennale'].map(c => (
+                    {['QualiPV QB01', 'RGE', 'QUALIBAT', 'IRVE'].map(c => (
                       <span key={c} className="text-xs bg-gray-100 text-gray-600 px-1.5 py-0.5 rounded font-medium">{c}</span>
                     ))}
                   </div>
@@ -338,6 +338,14 @@ export default function DevisDetailPage() {
                   ))}
                 </tbody>
               </table>
+
+              {/* Décennale sous-traitant */}
+              {devis.infoDecennale && (
+                <div className="mb-6 p-4 border border-gray-200 rounded-xl bg-gray-50">
+                  <p className="text-xs font-bold text-gray-700 uppercase tracking-wide mb-1">Assurance Décennale — Sous-traitant poseur</p>
+                  <p className="text-sm text-gray-700 whitespace-pre-wrap">{devis.infoDecennale}</p>
+                </div>
+              )}
 
               {/* Totals */}
               <div className="flex justify-end">
@@ -441,11 +449,10 @@ export default function DevisDetailPage() {
                     </div>
                   </div>
                   <div>
-                    <p className="text-xs font-bold text-gray-700 mb-1">Assurances & habilitations</p>
+                    <p className="text-xs font-bold text-gray-700 mb-1">Habilitations</p>
                     <div className="space-y-0.5">
                       <p className="text-xs text-gray-600">✓ QUALIBAT — Qualification bâtiment</p>
                       <p className="text-xs text-gray-600">✓ IRVE — Bornes de recharge véhicule électrique</p>
-                      <p className="text-xs text-gray-600">✓ Assurance Décennale — Responsabilité du poseur</p>
                     </div>
                   </div>
                 </div>

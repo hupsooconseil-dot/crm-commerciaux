@@ -79,6 +79,7 @@ export default function NouveauDevisPage() {
     montantAides: 0,
     labelAides: 'MaPrimeRénov\' + CEE',
     modeFinancement: 'COMPTANT',
+    infoDecennale: '',
   })
 
   const [newLigne, setNewLigne] = useState<Ligne>({
@@ -390,11 +391,20 @@ export default function NouveauDevisPage() {
           </div>
 
           {/* Notes */}
-          <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-5">
-            <h2 className="font-semibold text-gray-900 mb-3">Notes et conditions</h2>
-            <textarea value={form.notes} onChange={e => setForm(f => ({ ...f, notes: e.target.value }))}
-              rows={3} placeholder="Conditions particulières, remarques..."
-              className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none" />
+          <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-5 space-y-4">
+            <div>
+              <h2 className="font-semibold text-gray-900 mb-3">Notes et conditions</h2>
+              <textarea value={form.notes} onChange={e => setForm(f => ({ ...f, notes: e.target.value }))}
+                rows={3} placeholder="Conditions particulières, remarques..."
+                className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none" />
+            </div>
+            <div>
+              <label className="block font-semibold text-gray-900 mb-1 text-sm">Assurance Décennale — Sous-traitant poseur</label>
+              <p className="text-xs text-gray-400 mb-2">Nom de la société, assureur, numéro de police, validité...</p>
+              <textarea value={form.infoDecennale} onChange={e => setForm(f => ({ ...f, infoDecennale: e.target.value }))}
+                rows={3} placeholder="Ex: Pose réalisée par Électric Sud — Assuré AXA Pro, police n° 1234567, valide jusqu'au 31/12/2026"
+                className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none" />
+            </div>
           </div>
         </div>
 
