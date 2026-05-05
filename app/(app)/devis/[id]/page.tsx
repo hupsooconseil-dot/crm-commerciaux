@@ -52,6 +52,7 @@ interface Devis {
   montantTTC: number
   montantAides: number
   labelAides: string | null
+  modeFinancement: string
   dateDevis: string
   dateValidite: string | null
   notes: string | null
@@ -195,10 +196,19 @@ export default function DevisDetailPage() {
           {/* Status bar */}
           <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-5 no-print">
             <div className="flex items-center justify-between flex-wrap gap-3">
-              <div className="flex items-center gap-3">
+              <div className="flex items-center gap-3 flex-wrap">
                 <span className={`text-sm px-3 py-1 rounded-full font-medium ${STATUT_COLORS[devis.statut]}`}>
                   {STATUT_LABELS[devis.statut]}
                 </span>
+                {devis.modeFinancement === 'SUNLIB' ? (
+                  <span className="text-sm px-3 py-1 rounded-full font-medium bg-orange-100 text-orange-700">
+                    🌞 SUNLIB — {devis.typeClient === 'PARTICULIER' ? '25 ans' : '10 ans'} — 0€ reste à charge
+                  </span>
+                ) : (
+                  <span className="text-sm px-3 py-1 rounded-full font-medium bg-blue-50 text-blue-700">
+                    Comptant
+                  </span>
+                )}
                 {devis.dateValidite && (
                   <span className="text-sm text-gray-500">Valide jusqu'au {formatDate(devis.dateValidite)}</span>
                 )}
@@ -300,7 +310,7 @@ export default function DevisDetailPage() {
 
               {/* Totals */}
               <div className="flex justify-end">
-                <div className="w-72 space-y-2">
+                <div className="w-80 space-y-2">
                   <div className="flex justify-between text-sm text-gray-600">
                     <span>Total HT</span>
                     <span>{formatCurrency(devis.montantHT)}</span>
@@ -313,17 +323,48 @@ export default function DevisDetailPage() {
                     <span>Total TTC</span>
                     <span className="text-blue-600">{formatCurrency(devis.montantTTC)}</span>
                   </div>
-                  {devis.montantAides > 0 && (
+
+                  {devis.modeFinancement === 'COMPTANT' && devis.montantAides > 0 && (
                     <>
                       <div className="flex justify-between text-sm text-green-700 pt-1">
                         <span>{devis.labelAides || 'Aides et subventions'}</span>
                         <span>- {formatCurrency(devis.montantAides)}</span>
                       </div>
-                      <div className="flex justify-between items-center bg-green-600 text-white rounded-xl px-4 py-3 mt-2">
+                      <div className="flex justify-between items-center bg-green-600 text-white rounded-xl px-4 py-3 mt-1">
                         <span className="font-bold text-sm">RESTE À CHARGE CLIENT</span>
                         <span className="text-xl font-bold">{formatCurrency(Math.max(0, devis.montantTTC - devis.montantAides))}</span>
                       </div>
                     </>
+                  )}
+
+                  {devis.modeFinancement === 'SUNLIB' && (
+                    <div className="mt-3 rounded-xl overflow-hidden border-2 border-orange-400">
+                      <div className="bg-orange-500 px-4 py-2 flex items-center gap-2">
+                        <span className="text-white text-base">🌞</span>
+                        <span className="text-white font-bold text-sm tracking-wide">SOLUTION SUNLIB</span>
+                      </div>
+                      <div className="bg-orange-50 px-4 py-3 space-y-2">
+                        <div className="flex justify-between text-sm">
+                          <span className="text-gray-700">Type d'abonnement</span>
+                          <span className="font-semibold text-gray-900">
+                            {devis.typeClient === 'PARTICULIER' ? 'Particulier — 25 ans' : 'Professionnel — 10 ans'}
+                          </span>
+                        </div>
+                        <div className="flex justify-between text-sm">
+                          <span className="text-gray-700">Mensualité</span>
+                          <span className="font-semibold text-orange-700">Définie par SUNLIB *</span>
+                        </div>
+                        <div className="flex justify-between items-center bg-green-600 text-white rounded-lg px-3 py-2.5 mt-1">
+                          <span className="font-bold text-sm">RESTE À CHARGE CLIENT</span>
+                          <span className="text-2xl font-bold">0 €</span>
+                        </div>
+                      </div>
+                      <div className="bg-orange-100 px-4 py-2">
+                        <p className="text-xs text-orange-800">
+                          * Le montant de la mensualité sera communiqué par SUNLIB à réception du contrat définitif d'abonnement.
+                        </p>
+                      </div>
+                    </div>
                   )}
                 </div>
               </div>
@@ -367,7 +408,8 @@ export default function DevisDetailPage() {
                   <p><strong className="text-gray-600">Art. 9 — Propriété.</strong> Les équipements installés restent la propriété du Vendeur jusqu'au paiement complet du prix. En cas de non-paiement, le Vendeur pourra revendiquer la restitution du matériel.</p>
                   <p><strong className="text-gray-600">Art. 10 — Responsabilité.</strong> Le Vendeur ne pourra être tenu responsable des dommages indirects liés à l'utilisation de l'installation. La responsabilité du Vendeur est limitée au montant du contrat. Le Client s'engage à souscrire une assurance habitation couvrant les panneaux solaires.</p>
                   <p><strong className="text-gray-600">Art. 11 — Données personnelles.</strong> Les données collectées sont traitées conformément au RGPD à des fins de gestion du contrat. Le Client dispose d'un droit d'accès, de rectification et de suppression de ses données en contactant le Vendeur.</p>
-                  <p><strong className="text-gray-600">Art. 12 — Litiges.</strong> En cas de litige, les parties s'engagent à rechercher une solution amiable. À défaut, le tribunal compétent sera celui du siège social du Vendeur.</p>
+                  <p><strong className="text-gray-600">Art. 12 — Solution SUNLIB.</strong> Lorsque le financement est réalisé via la solution SUNLIB, le Client souscrit un abonnement auprès de SUNLIB (25 ans pour les particuliers, 10 ans pour les professionnels). Le montant de la mensualité est fixé par SUNLIB et communiqué dans le contrat d'abonnement définitif. Le reste à charge est de 0 € pour le Client. Les relations contractuelles entre le Client et SUNLIB sont régies par les CGV spécifiques de SUNLIB.</p>
+                  <p><strong className="text-gray-600">Art. 13 — Litiges.</strong> En cas de litige, les parties s'engagent à rechercher une solution amiable. À défaut, le tribunal compétent sera celui du siège social du Vendeur.</p>
                 </div>
               </div>
             </div>

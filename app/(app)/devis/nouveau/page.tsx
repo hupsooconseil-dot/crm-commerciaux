@@ -78,6 +78,7 @@ export default function NouveauDevisPage() {
     notes: '',
     montantAides: 0,
     labelAides: 'MaPrimeRénov\' + CEE',
+    modeFinancement: 'COMPTANT',
   })
 
   const [newLigne, setNewLigne] = useState<Ligne>({
@@ -425,29 +426,65 @@ export default function NouveauDevisPage() {
               </div>
             </div>
 
-            {/* Aides & Reste à charge */}
-            <div className="mt-4 p-3 bg-green-50 rounded-xl border border-green-200 space-y-3">
-              <p className="text-xs font-semibold text-green-800 uppercase tracking-wide">Aides & Reste à charge</p>
-              <div>
-                <label className="block text-xs font-medium text-gray-600 mb-1">Libellé des aides</label>
-                <input type="text" value={form.labelAides}
-                  onChange={e => setForm(f => ({ ...f, labelAides: e.target.value }))}
-                  placeholder="MaPrimeRénov' + CEE"
-                  className="w-full px-2.5 py-1.5 border border-green-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-green-400 bg-white" />
-              </div>
-              <div>
-                <label className="block text-xs font-medium text-gray-600 mb-1">Montant des aides (€)</label>
-                <input type="number" min={0} step={100} value={form.montantAides}
-                  onChange={e => setForm(f => ({ ...f, montantAides: Number(e.target.value) }))}
-                  className="w-full px-2.5 py-1.5 border border-green-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-green-400 bg-white" />
-              </div>
-              <div className="flex justify-between items-center border-t border-green-200 pt-2">
-                <span className="text-sm font-bold text-green-900">Reste à charge client</span>
-                <span className="text-lg font-bold text-green-700">
-                  {formatCurrency(Math.max(0, montantTTC - form.montantAides))}
-                </span>
+            {/* Mode de financement */}
+            <div className="mt-4 space-y-2">
+              <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide">Mode de financement</p>
+              <div className="grid grid-cols-2 gap-2">
+                <button type="button"
+                  onClick={() => setForm(f => ({ ...f, modeFinancement: 'COMPTANT' }))}
+                  className={`p-3 rounded-xl border-2 text-left transition-all ${form.modeFinancement === 'COMPTANT' ? 'border-blue-500 bg-blue-50' : 'border-gray-200 bg-white hover:border-gray-300'}`}>
+                  <p className="text-sm font-semibold text-gray-900">Comptant</p>
+                  <p className="text-xs text-gray-500 mt-0.5">Paiement direct avec aides</p>
+                </button>
+                <button type="button"
+                  onClick={() => setForm(f => ({ ...f, modeFinancement: 'SUNLIB' }))}
+                  className={`p-3 rounded-xl border-2 text-left transition-all ${form.modeFinancement === 'SUNLIB' ? 'border-orange-500 bg-orange-50' : 'border-gray-200 bg-white hover:border-gray-300'}`}>
+                  <p className="text-sm font-semibold text-gray-900">🌞 SUNLIB</p>
+                  <p className="text-xs text-gray-500 mt-0.5">Abonnement — 0€ de reste à charge</p>
+                </button>
               </div>
             </div>
+
+            {form.modeFinancement === 'COMPTANT' && (
+              <div className="p-3 bg-green-50 rounded-xl border border-green-200 space-y-3">
+                <p className="text-xs font-semibold text-green-800 uppercase tracking-wide">Aides & Reste à charge</p>
+                <div>
+                  <label className="block text-xs font-medium text-gray-600 mb-1">Libellé des aides</label>
+                  <input type="text" value={form.labelAides}
+                    onChange={e => setForm(f => ({ ...f, labelAides: e.target.value }))}
+                    placeholder="MaPrimeRénov' + CEE"
+                    className="w-full px-2.5 py-1.5 border border-green-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-green-400 bg-white" />
+                </div>
+                <div>
+                  <label className="block text-xs font-medium text-gray-600 mb-1">Montant des aides (€)</label>
+                  <input type="number" min={0} step={100} value={form.montantAides}
+                    onChange={e => setForm(f => ({ ...f, montantAides: Number(e.target.value) }))}
+                    className="w-full px-2.5 py-1.5 border border-green-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-green-400 bg-white" />
+                </div>
+                <div className="flex justify-between items-center border-t border-green-200 pt-2">
+                  <span className="text-sm font-bold text-green-900">Reste à charge</span>
+                  <span className="text-lg font-bold text-green-700">
+                    {formatCurrency(Math.max(0, montantTTC - form.montantAides))}
+                  </span>
+                </div>
+              </div>
+            )}
+
+            {form.modeFinancement === 'SUNLIB' && (
+              <div className="p-3 bg-orange-50 rounded-xl border border-orange-300 space-y-2">
+                <div className="flex items-center gap-2">
+                  <span className="text-lg">🌞</span>
+                  <p className="text-sm font-bold text-orange-900">Solution SUNLIB</p>
+                </div>
+                <p className="text-xs text-orange-800">
+                  Abonnement <strong>{form.typeClient === 'PARTICULIER' ? '25 ans' : '10 ans'}</strong> — mensualité fixée par SUNLIB à réception du contrat définitif.
+                </p>
+                <div className="flex justify-between items-center bg-green-600 text-white rounded-lg px-3 py-2 mt-1">
+                  <span className="text-xs font-bold">RESTE À CHARGE</span>
+                  <span className="text-base font-bold">0 €</span>
+                </div>
+              </div>
+            )}
 
             <div className="mt-5 space-y-2">
               <button onClick={() => save('BROUILLON')} disabled={saving}

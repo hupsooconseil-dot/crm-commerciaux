@@ -355,6 +355,7 @@ model Devis {
   montantTTC       Float        @default(0)
   montantAides     Float        @default(0)
   labelAides       String?
+  modeFinancement  String       @default("COMPTANT")
   dateDevis        DateTime     @default(now())
   dateValidite     DateTime?
   notes            String?
