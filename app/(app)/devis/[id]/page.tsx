@@ -242,8 +242,12 @@ export default function DevisDetailPage() {
             <div className="bg-blue-600 text-white px-8 py-6">
               <div className="flex justify-between items-start">
                 <div>
-                  <h2 className="text-2xl font-bold">SOLENYX ENERGIE</h2>
+                  <h2 className="text-2xl font-bold tracking-wide">SOLENYX ENERGIE</h2>
                   <p className="text-blue-200 text-sm mt-1">Solutions photovoltaïques</p>
+                  <div className="mt-2 text-blue-100 text-xs space-y-0.5">
+                    <p>23 rue Crépet — 69007 Lyon</p>
+                    <p>contact@solenyx.fr</p>
+                  </div>
                 </div>
                 <div className="text-right">
                   <p className="text-xl font-bold">DEVIS</p>
@@ -256,15 +260,42 @@ export default function DevisDetailPage() {
               </div>
             </div>
 
+            {/* Certifications strip */}
+            <div className="bg-gray-50 border-b border-gray-200 px-8 py-3">
+              <div className="flex flex-wrap items-center gap-3">
+                <span className="text-xs font-semibold text-gray-500 uppercase tracking-wide mr-1">Certifications :</span>
+                {[
+                  { label: 'QualiPV QB 01', color: 'bg-yellow-100 text-yellow-800 border-yellow-300', title: 'Résidentiel' },
+                  { label: 'QualiPV QB 02', color: 'bg-yellow-100 text-yellow-800 border-yellow-300', title: 'Commercial' },
+                  { label: 'RGE', color: 'bg-green-100 text-green-800 border-green-300', title: 'Reconnu Garant de l\'Environnement' },
+                  { label: 'QUALIBAT', color: 'bg-blue-100 text-blue-800 border-blue-300', title: 'Qualité Bâtiment' },
+                  { label: 'IRVE', color: 'bg-purple-100 text-purple-800 border-purple-300', title: 'Borne de recharge véhicule électrique' },
+                  { label: 'Décennale', color: 'bg-red-100 text-red-800 border-red-300', title: 'Assurance Responsabilité Décennale' },
+                ].map(c => (
+                  <span key={c.label} title={c.title}
+                    className={`text-xs font-bold px-2.5 py-1 rounded-full border ${c.color}`}>
+                    {c.label}
+                  </span>
+                ))}
+              </div>
+            </div>
+
             <div className="p-8">
               {/* Client info */}
               <div className="grid grid-cols-2 gap-8 mb-8">
                 <div>
                   <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2">Émetteur</p>
                   <p className="font-semibold text-gray-900">Solenyx Energie</p>
+                  <p className="text-sm text-gray-600">23 rue Crépet</p>
+                  <p className="text-sm text-gray-600">69007 Lyon</p>
                   {devis.commercial && (
-                    <p className="text-sm text-gray-600">{devis.commercial.prenom} {devis.commercial.nom}</p>
+                    <p className="text-sm text-gray-600 mt-1">Commercial : {devis.commercial.prenom} {devis.commercial.nom}</p>
                   )}
+                  <div className="flex flex-wrap gap-1 mt-2">
+                    {['QualiPV QB01', 'RGE', 'QUALIBAT', 'Décennale'].map(c => (
+                      <span key={c} className="text-xs bg-gray-100 text-gray-600 px-1.5 py-0.5 rounded font-medium">{c}</span>
+                    ))}
+                  </div>
                 </div>
                 <div>
                   <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2">Client</p>
@@ -389,6 +420,33 @@ export default function DevisDetailPage() {
                     <p className="text-xs text-gray-500 mb-1">Pour le client — Bon pour accord :</p>
                     <p className="text-xs text-gray-400 mb-4">Date : ___/___/______</p>
                     <div className="border-b border-gray-300 h-12"></div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Footer certifications */}
+              <div className="mt-8 pt-6 border-t border-gray-200 bg-gray-50 -mx-8 px-8 py-4">
+                <div className="flex flex-wrap justify-between items-start gap-4">
+                  <div>
+                    <p className="text-xs font-bold text-gray-700 mb-1">SOLENYX ENERGIE</p>
+                    <p className="text-xs text-gray-500">23 rue Crépet — 69007 Lyon</p>
+                    <p className="text-xs text-gray-500">contact@solenyx.fr</p>
+                  </div>
+                  <div>
+                    <p className="text-xs font-bold text-gray-700 mb-1">Certifications qualité</p>
+                    <div className="space-y-0.5">
+                      <p className="text-xs text-gray-600">✓ QualiPV QB 01 — Installations résidentielles</p>
+                      <p className="text-xs text-gray-600">✓ QualiPV QB 02 — Installations commerciales</p>
+                      <p className="text-xs text-gray-600">✓ RGE — Reconnu Garant de l'Environnement</p>
+                    </div>
+                  </div>
+                  <div>
+                    <p className="text-xs font-bold text-gray-700 mb-1">Assurances & habilitations</p>
+                    <div className="space-y-0.5">
+                      <p className="text-xs text-gray-600">✓ QUALIBAT — Qualification bâtiment</p>
+                      <p className="text-xs text-gray-600">✓ IRVE — Bornes de recharge véhicule électrique</p>
+                      <p className="text-xs text-gray-600">✓ Assurance Décennale — Responsabilité du poseur</p>
+                    </div>
                   </div>
                 </div>
               </div>
