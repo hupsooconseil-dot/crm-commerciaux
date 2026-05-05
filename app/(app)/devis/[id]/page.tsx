@@ -50,6 +50,8 @@ interface Devis {
   typeClient: string
   montantHT: number
   montantTTC: number
+  montantAides: number
+  labelAides: string | null
   dateDevis: string
   dateValidite: string | null
   notes: string | null
@@ -298,7 +300,7 @@ export default function DevisDetailPage() {
 
               {/* Totals */}
               <div className="flex justify-end">
-                <div className="w-64 space-y-2">
+                <div className="w-72 space-y-2">
                   <div className="flex justify-between text-sm text-gray-600">
                     <span>Total HT</span>
                     <span>{formatCurrency(devis.montantHT)}</span>
@@ -311,10 +313,22 @@ export default function DevisDetailPage() {
                     <span>Total TTC</span>
                     <span className="text-blue-600">{formatCurrency(devis.montantTTC)}</span>
                   </div>
+                  {devis.montantAides > 0 && (
+                    <>
+                      <div className="flex justify-between text-sm text-green-700 pt-1">
+                        <span>{devis.labelAides || 'Aides et subventions'}</span>
+                        <span>- {formatCurrency(devis.montantAides)}</span>
+                      </div>
+                      <div className="flex justify-between items-center bg-green-600 text-white rounded-xl px-4 py-3 mt-2">
+                        <span className="font-bold text-sm">RESTE À CHARGE CLIENT</span>
+                        <span className="text-xl font-bold">{formatCurrency(Math.max(0, devis.montantTTC - devis.montantAides))}</span>
+                      </div>
+                    </>
+                  )}
                 </div>
               </div>
 
-              {/* Notes */}
+              {/* Notes particulières */}
               {devis.notes && (
                 <div className="mt-8 pt-6 border-t border-gray-100">
                   <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2">Conditions particulières</p>
@@ -322,10 +336,39 @@ export default function DevisDetailPage() {
                 </div>
               )}
 
-              {/* Legal footer */}
-              <div className="mt-8 pt-6 border-t border-gray-100 text-xs text-gray-400 space-y-1">
-                <p>Ce devis est valable {devis.dateValidite ? `jusqu'au ${formatDate(devis.dateValidite)}` : '30 jours'} à compter de sa date d'émission.</p>
-                <p>Pour accepter ce devis, merci de nous retourner ce document signé avec la mention "Bon pour accord".</p>
+              {/* Signature */}
+              <div className="mt-8 pt-6 border-t border-gray-100">
+                <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-4">Acceptation du devis</p>
+                <div className="grid grid-cols-2 gap-8">
+                  <div>
+                    <p className="text-xs text-gray-500 mb-6">Pour Solenyx Energie — Signature :</p>
+                    <div className="border-b border-gray-300 h-12"></div>
+                  </div>
+                  <div>
+                    <p className="text-xs text-gray-500 mb-1">Pour le client — Bon pour accord :</p>
+                    <p className="text-xs text-gray-400 mb-4">Date : ___/___/______</p>
+                    <div className="border-b border-gray-300 h-12"></div>
+                  </div>
+                </div>
+              </div>
+
+              {/* CGV */}
+              <div className="mt-8 pt-6 border-t-2 border-gray-200">
+                <p className="text-xs font-bold text-gray-600 uppercase tracking-wider mb-3">Conditions Générales de Vente</p>
+                <div className="text-xs text-gray-500 space-y-2 leading-relaxed columns-2 gap-6">
+                  <p><strong className="text-gray-600">Art. 1 — Objet.</strong> Les présentes CGV régissent les relations contractuelles entre Solenyx Energie (ci-après "le Vendeur") et tout client (ci-après "le Client") dans le cadre de la fourniture et de l'installation de systèmes photovoltaïques et de services associés.</p>
+                  <p><strong className="text-gray-600">Art. 2 — Validité du devis.</strong> Le présent devis est valable pendant la durée indiquée en première page. Passé ce délai, les prix pourront être révisés. L'acceptation du devis par le Client vaut conclusion du contrat.</p>
+                  <p><strong className="text-gray-600">Art. 3 — Prix.</strong> Les prix sont indiqués en euros HT et TTC. Les taux de TVA applicables sont ceux en vigueur à la date de facturation. Pour les travaux de rénovation énergétique sur logements de plus de 2 ans, le taux réduit de 10 % s'applique conformément à l'art. 279-0 bis du CGI.</p>
+                  <p><strong className="text-gray-600">Art. 4 — Modalités de paiement.</strong> Un acompte de 30 % est exigible à la signature du devis. Le solde est dû à la réception des travaux. Tout retard de paiement entraîne des pénalités au taux légal en vigueur, ainsi qu'une indemnité forfaitaire de 40 € pour frais de recouvrement.</p>
+                  <p><strong className="text-gray-600">Art. 5 — Aides et subventions.</strong> Les aides financières indiquées (MaPrimeRénov', CEE, aides locales) sont estimées selon la réglementation en vigueur. Le Vendeur accompagne le Client dans les démarches mais ne peut garantir l'obtention des aides, celles-ci étant soumises à l'éligibilité du Client et aux décisions des organismes concernés. Le montant TTC reste dû en totalité indépendamment de l'obtention des aides.</p>
+                  <p><strong className="text-gray-600">Art. 6 — Droit de rétractation.</strong> Conformément aux articles L. 221-18 et suivants du Code de la consommation, le Client bénéficie d'un délai de rétractation de 14 jours calendaires à compter de la signature du présent devis. Passé ce délai, aucune annulation ne pourra être acceptée sans frais.</p>
+                  <p><strong className="text-gray-600">Art. 7 — Délais d'installation.</strong> Les délais d'installation sont donnés à titre indicatif et peuvent varier en fonction des contraintes administratives (Consuel, Enedis, mairie) et des conditions météorologiques. Aucun retard d'installation n'ouvre droit à indemnité sauf faute grave du Vendeur.</p>
+                  <p><strong className="text-gray-600">Art. 8 — Garanties.</strong> Les équipements bénéficient des garanties fabricants : 25 ans de rendement sur les panneaux, 10 ans sur les onduleurs (sauf mention contraire). La main d'œuvre est garantie 2 ans à compter de la date de réception des travaux. Ces garanties ne couvrent pas les dommages liés à un mauvais usage, une cause externe ou un défaut d'entretien.</p>
+                  <p><strong className="text-gray-600">Art. 9 — Propriété.</strong> Les équipements installés restent la propriété du Vendeur jusqu'au paiement complet du prix. En cas de non-paiement, le Vendeur pourra revendiquer la restitution du matériel.</p>
+                  <p><strong className="text-gray-600">Art. 10 — Responsabilité.</strong> Le Vendeur ne pourra être tenu responsable des dommages indirects liés à l'utilisation de l'installation. La responsabilité du Vendeur est limitée au montant du contrat. Le Client s'engage à souscrire une assurance habitation couvrant les panneaux solaires.</p>
+                  <p><strong className="text-gray-600">Art. 11 — Données personnelles.</strong> Les données collectées sont traitées conformément au RGPD à des fins de gestion du contrat. Le Client dispose d'un droit d'accès, de rectification et de suppression de ses données en contactant le Vendeur.</p>
+                  <p><strong className="text-gray-600">Art. 12 — Litiges.</strong> En cas de litige, les parties s'engagent à rechercher une solution amiable. À défaut, le tribunal compétent sera celui du siège social du Vendeur.</p>
+                </div>
               </div>
             </div>
           </div>

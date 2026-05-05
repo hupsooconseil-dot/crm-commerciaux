@@ -76,6 +76,8 @@ export default function NouveauDevisPage() {
     typeClient: 'PARTICULIER',
     dateValidite: new Date(Date.now() + 30 * 86400000).toISOString().split('T')[0],
     notes: '',
+    montantAides: 0,
+    labelAides: 'MaPrimeRénov\' + CEE',
   })
 
   const [newLigne, setNewLigne] = useState<Ligne>({
@@ -420,6 +422,30 @@ export default function NouveauDevisPage() {
               <div className="flex justify-between text-base font-bold text-gray-900 border-t border-gray-100 pt-2">
                 <span>Total TTC</span>
                 <span className="text-blue-600">{formatCurrency(montantTTC)}</span>
+              </div>
+            </div>
+
+            {/* Aides & Reste à charge */}
+            <div className="mt-4 p-3 bg-green-50 rounded-xl border border-green-200 space-y-3">
+              <p className="text-xs font-semibold text-green-800 uppercase tracking-wide">Aides & Reste à charge</p>
+              <div>
+                <label className="block text-xs font-medium text-gray-600 mb-1">Libellé des aides</label>
+                <input type="text" value={form.labelAides}
+                  onChange={e => setForm(f => ({ ...f, labelAides: e.target.value }))}
+                  placeholder="MaPrimeRénov' + CEE"
+                  className="w-full px-2.5 py-1.5 border border-green-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-green-400 bg-white" />
+              </div>
+              <div>
+                <label className="block text-xs font-medium text-gray-600 mb-1">Montant des aides (€)</label>
+                <input type="number" min={0} step={100} value={form.montantAides}
+                  onChange={e => setForm(f => ({ ...f, montantAides: Number(e.target.value) }))}
+                  className="w-full px-2.5 py-1.5 border border-green-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-green-400 bg-white" />
+              </div>
+              <div className="flex justify-between items-center border-t border-green-200 pt-2">
+                <span className="text-sm font-bold text-green-900">Reste à charge client</span>
+                <span className="text-lg font-bold text-green-700">
+                  {formatCurrency(Math.max(0, montantTTC - form.montantAides))}
+                </span>
               </div>
             </div>
 

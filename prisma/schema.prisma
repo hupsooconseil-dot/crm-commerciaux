@@ -353,6 +353,8 @@ model Devis {
   typeClient       String       @default("PARTICULIER")
   montantHT        Float        @default(0)
   montantTTC       Float        @default(0)
+  montantAides     Float        @default(0)
+  labelAides       String?
   dateDevis        DateTime     @default(now())
   dateValidite     DateTime?
   notes            String?
