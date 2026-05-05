@@ -5,6 +5,26 @@ import { useParams, useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { formatCurrency, formatDate } from '@/app/lib/utils'
 
+async function exportPDF(elementId: string, filename: string) {
+  const { default: html2canvas } = await import('html2canvas')
+  const { default: jsPDF } = await import('jspdf')
+  const element = document.getElementById(elementId)
+  if (!element) return
+  const canvas = await html2canvas(element, { scale: 2, useCORS: true, backgroundColor: '#ffffff' })
+  const imgData = canvas.toDataURL('image/png')
+  const pdf = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' })
+  const pageW = pdf.internal.pageSize.getWidth()
+  const pageH = pdf.internal.pageSize.getHeight()
+  const imgH = (canvas.height * pageW) / canvas.width
+  let y = 0
+  while (y < imgH) {
+    pdf.addImage(imgData, 'PNG', 0, -y, pageW, imgH)
+    y += pageH
+    if (y < imgH) pdf.addPage()
+  }
+  pdf.save(filename)
+}
+
 interface LigneDevis {
   id: string
   kitId: string | null
@@ -60,6 +80,7 @@ export default function DevisDetailPage() {
   const [devis, setDevis] = useState<Devis | null>(null)
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
+  const [generatingPDF, setGeneratingPDF] = useState(false)
   const [editStatut, setEditStatut] = useState(false)
   const [newStatut, setNewStatut] = useState('')
 
@@ -89,6 +110,12 @@ export default function DevisDetailPage() {
     if (!confirm('Supprimer ce devis définitivement ?')) return
     await fetch(`/api/devis/${id}`, { method: 'DELETE' })
     router.push('/devis')
+  }
+
+  async function downloadPDF() {
+    setGeneratingPDF(true)
+    await exportPDF('print-zone', `${devis?.reference || 'devis'}.pdf`)
+    setGeneratingPDF(false)
   }
 
   function print() {
@@ -127,6 +154,25 @@ export default function DevisDetailPage() {
             </div>
           </div>
           <div className="flex items-center gap-2">
+            <button onClick={downloadPDF} disabled={generatingPDF}
+              className="flex items-center gap-1.5 px-3 py-2 bg-blue-600 text-white rounded-lg text-sm font-medium hover:bg-blue-700 disabled:opacity-60">
+              {generatingPDF ? (
+                <>
+                  <svg className="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24">
+                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z" />
+                  </svg>
+                  Génération...
+                </>
+              ) : (
+                <>
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3M3 17V7a2 2 0 012-2h6l2 2h6a2 2 0 012 2v8a2 2 0 01-2 2H5a2 2 0 01-2-2z" />
+                  </svg>
+                  Télécharger PDF
+                </>
+              )}
+            </button>
             <button onClick={print}
               className="flex items-center gap-1.5 px-3 py-2 bg-gray-100 text-gray-700 rounded-lg text-sm hover:bg-gray-200">
               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
