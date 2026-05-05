@@ -1,0 +1,290 @@
+'use client'
+
+import { useEffect, useState, useRef } from 'react'
+import { useParams, useRouter } from 'next/navigation'
+import Link from 'next/link'
+import { formatCurrency, formatDate } from '@/app/lib/utils'
+
+interface LigneDevis {
+  id: string
+  kitId: string | null
+  designation: string
+  description: string | null
+  quantite: number
+  prixUnitaireHT: number
+  tva: number
+  totalHT: number
+  ordre: number
+}
+
+interface Devis {
+  id: string
+  reference: string
+  statut: string
+  clientNom: string
+  clientEmail: string | null
+  clientTelephone: string | null
+  clientAdresse: string | null
+  clientVille: string | null
+  clientCodePostal: string | null
+  typeClient: string
+  montantHT: number
+  montantTTC: number
+  dateDevis: string
+  dateValidite: string | null
+  notes: string | null
+  lignes: LigneDevis[]
+  commercial: { nom: string; prenom: string } | null
+  prospect: { raisonSociale: string; email: string | null; telephone: string | null; ville: string | null } | null
+}
+
+const STATUTS = ['BROUILLON', 'ENVOYE', 'ACCEPTE', 'REFUSE', 'EXPIRE']
+const STATUT_LABELS: Record<string, string> = {
+  BROUILLON: 'Brouillon', ENVOYE: 'Envoyé', ACCEPTE: 'Accepté', REFUSE: 'Refusé', EXPIRE: 'Expiré',
+}
+const STATUT_COLORS: Record<string, string> = {
+  BROUILLON: 'bg-gray-100 text-gray-700',
+  ENVOYE: 'bg-blue-100 text-blue-700',
+  ACCEPTE: 'bg-green-100 text-green-700',
+  REFUSE: 'bg-red-100 text-red-700',
+  EXPIRE: 'bg-yellow-100 text-yellow-700',
+}
+
+function calcTTC(ht: number, tva: number) { return ht * (1 + tva / 100) }
+
+export default function DevisDetailPage() {
+  const { id } = useParams<{ id: string }>()
+  const router = useRouter()
+  const printRef = useRef<HTMLDivElement>(null)
+
+  const [devis, setDevis] = useState<Devis | null>(null)
+  const [loading, setLoading] = useState(true)
+  const [saving, setSaving] = useState(false)
+  const [editStatut, setEditStatut] = useState(false)
+  const [newStatut, setNewStatut] = useState('')
+
+  useEffect(() => {
+    fetch(`/api/devis/${id}`).then(r => r.json()).then(d => {
+      setDevis(d)
+      setNewStatut(d.statut)
+      setLoading(false)
+    })
+  }, [id])
+
+  async function updateStatut() {
+    if (!devis) return
+    setSaving(true)
+    const res = await fetch(`/api/devis/${id}`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ statut: newStatut }),
+    })
+    const data = await res.json()
+    setDevis(d => d ? { ...d, statut: data.statut } : d)
+    setEditStatut(false)
+    setSaving(false)
+  }
+
+  async function deleteDevis() {
+    if (!confirm('Supprimer ce devis définitivement ?')) return
+    await fetch(`/api/devis/${id}`, { method: 'DELETE' })
+    router.push('/devis')
+  }
+
+  function print() {
+    window.print()
+  }
+
+  if (loading) return <div className="p-8 text-center text-gray-500">Chargement...</div>
+  if (!devis) return <div className="p-8 text-center text-gray-500">Devis introuvable</div>
+
+  const montantTVA = devis.lignes.reduce((s, l) => s + calcTTC(l.totalHT, l.tva) - l.totalHT, 0)
+
+  return (
+    <>
+      {/* Print styles */}
+      <style>{`
+        @media print {
+          body * { visibility: hidden; }
+          #print-zone, #print-zone * { visibility: visible; }
+          #print-zone { position: fixed; top: 0; left: 0; width: 100%; }
+          .no-print { display: none !important; }
+        }
+      `}</style>
+
+      <div className="p-4 md:p-6 max-w-4xl mx-auto">
+        {/* Header */}
+        <div className="flex flex-wrap items-center justify-between gap-3 mb-6 no-print">
+          <div className="flex items-center gap-3">
+            <Link href="/devis" className="text-gray-400 hover:text-gray-600">
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+              </svg>
+            </Link>
+            <div>
+              <h1 className="text-xl font-bold text-gray-900 font-mono">{devis.reference}</h1>
+              <p className="text-sm text-gray-500">Créé le {formatDate(devis.dateDevis)}</p>
+            </div>
+          </div>
+          <div className="flex items-center gap-2">
+            <button onClick={print}
+              className="flex items-center gap-1.5 px-3 py-2 bg-gray-100 text-gray-700 rounded-lg text-sm hover:bg-gray-200">
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" />
+              </svg>
+              Imprimer
+            </button>
+            <button onClick={deleteDevis}
+              className="flex items-center gap-1.5 px-3 py-2 bg-red-50 text-red-600 rounded-lg text-sm hover:bg-red-100">
+              Supprimer
+            </button>
+          </div>
+        </div>
+
+        {/* Printable zone */}
+        <div id="print-zone" ref={printRef} className="space-y-5">
+
+          {/* Status bar */}
+          <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-5 no-print">
+            <div className="flex items-center justify-between flex-wrap gap-3">
+              <div className="flex items-center gap-3">
+                <span className={`text-sm px-3 py-1 rounded-full font-medium ${STATUT_COLORS[devis.statut]}`}>
+                  {STATUT_LABELS[devis.statut]}
+                </span>
+                {devis.dateValidite && (
+                  <span className="text-sm text-gray-500">Valide jusqu'au {formatDate(devis.dateValidite)}</span>
+                )}
+              </div>
+              {!editStatut ? (
+                <button onClick={() => setEditStatut(true)}
+                  className="text-sm text-blue-600 hover:text-blue-800 font-medium">
+                  Changer le statut
+                </button>
+              ) : (
+                <div className="flex items-center gap-2">
+                  <select value={newStatut} onChange={e => setNewStatut(e.target.value)}
+                    className="px-3 py-1.5 border border-gray-200 rounded-lg text-sm bg-white focus:outline-none focus:ring-2 focus:ring-blue-500">
+                    {STATUTS.map(s => <option key={s} value={s}>{STATUT_LABELS[s]}</option>)}
+                  </select>
+                  <button onClick={updateStatut} disabled={saving}
+                    className="px-3 py-1.5 bg-blue-600 text-white rounded-lg text-sm font-medium hover:bg-blue-700 disabled:opacity-50">
+                    {saving ? '...' : 'Valider'}
+                  </button>
+                  <button onClick={() => setEditStatut(false)} className="px-3 py-1.5 text-gray-500 hover:text-gray-700 text-sm">
+                    Annuler
+                  </button>
+                </div>
+              )}
+            </div>
+          </div>
+
+          {/* Devis document */}
+          <div className="bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden">
+            {/* Company header */}
+            <div className="bg-blue-600 text-white px-8 py-6">
+              <div className="flex justify-between items-start">
+                <div>
+                  <h2 className="text-2xl font-bold">SOLENYX ENERGIE</h2>
+                  <p className="text-blue-200 text-sm mt-1">Solutions photovoltaïques</p>
+                </div>
+                <div className="text-right">
+                  <p className="text-xl font-bold">DEVIS</p>
+                  <p className="text-blue-200 font-mono text-sm">{devis.reference}</p>
+                  <p className="text-blue-200 text-sm mt-1">Date : {formatDate(devis.dateDevis)}</p>
+                  {devis.dateValidite && (
+                    <p className="text-blue-200 text-sm">Valide jusqu'au : {formatDate(devis.dateValidite)}</p>
+                  )}
+                </div>
+              </div>
+            </div>
+
+            <div className="p-8">
+              {/* Client info */}
+              <div className="grid grid-cols-2 gap-8 mb-8">
+                <div>
+                  <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2">Émetteur</p>
+                  <p className="font-semibold text-gray-900">Solenyx Energie</p>
+                  {devis.commercial && (
+                    <p className="text-sm text-gray-600">{devis.commercial.prenom} {devis.commercial.nom}</p>
+                  )}
+                </div>
+                <div>
+                  <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2">Client</p>
+                  <p className="font-semibold text-gray-900">{devis.clientNom}</p>
+                  {devis.clientAdresse && <p className="text-sm text-gray-600">{devis.clientAdresse}</p>}
+                  {(devis.clientCodePostal || devis.clientVille) && (
+                    <p className="text-sm text-gray-600">{devis.clientCodePostal} {devis.clientVille}</p>
+                  )}
+                  {devis.clientEmail && <p className="text-sm text-gray-600">{devis.clientEmail}</p>}
+                  {devis.clientTelephone && <p className="text-sm text-gray-600">{devis.clientTelephone}</p>}
+                  <p className="text-xs text-gray-400 mt-1">
+                    {devis.typeClient === 'PARTICULIER' ? 'Particulier' : 'Professionnel'}
+                  </p>
+                </div>
+              </div>
+
+              {/* Lines */}
+              <table className="w-full text-sm mb-6">
+                <thead>
+                  <tr className="border-b-2 border-gray-200">
+                    <th className="pb-3 text-left font-semibold text-gray-700">Désignation</th>
+                    <th className="pb-3 text-center font-semibold text-gray-700 w-16">Qté</th>
+                    <th className="pb-3 text-right font-semibold text-gray-700 w-28">P.U. HT</th>
+                    <th className="pb-3 text-center font-semibold text-gray-700 w-16">TVA</th>
+                    <th className="pb-3 text-right font-semibold text-gray-700 w-28">Total HT</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-gray-100">
+                  {devis.lignes.map(l => (
+                    <tr key={l.id}>
+                      <td className="py-3 pr-4">
+                        <p className="font-medium text-gray-900">{l.designation}</p>
+                        {l.description && <p className="text-xs text-gray-500 mt-0.5">{l.description}</p>}
+                      </td>
+                      <td className="py-3 text-center text-gray-700">{l.quantite}</td>
+                      <td className="py-3 text-right text-gray-700">{formatCurrency(l.prixUnitaireHT)}</td>
+                      <td className="py-3 text-center text-gray-500 text-xs">{l.tva}%</td>
+                      <td className="py-3 text-right font-medium text-gray-900">{formatCurrency(l.totalHT)}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+
+              {/* Totals */}
+              <div className="flex justify-end">
+                <div className="w-64 space-y-2">
+                  <div className="flex justify-between text-sm text-gray-600">
+                    <span>Total HT</span>
+                    <span>{formatCurrency(devis.montantHT)}</span>
+                  </div>
+                  <div className="flex justify-between text-sm text-gray-600">
+                    <span>TVA</span>
+                    <span>{formatCurrency(montantTVA)}</span>
+                  </div>
+                  <div className="flex justify-between text-base font-bold text-gray-900 border-t-2 border-gray-200 pt-2">
+                    <span>Total TTC</span>
+                    <span className="text-blue-600">{formatCurrency(devis.montantTTC)}</span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Notes */}
+              {devis.notes && (
+                <div className="mt-8 pt-6 border-t border-gray-100">
+                  <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2">Conditions particulières</p>
+                  <p className="text-sm text-gray-600 whitespace-pre-wrap">{devis.notes}</p>
+                </div>
+              )}
+
+              {/* Legal footer */}
+              <div className="mt-8 pt-6 border-t border-gray-100 text-xs text-gray-400 space-y-1">
+                <p>Ce devis est valable {devis.dateValidite ? `jusqu'au ${formatDate(devis.dateValidite)}` : '30 jours'} à compter de sa date d'émission.</p>
+                <p>Pour accepter ce devis, merci de nous retourner ce document signé avec la mention "Bon pour accord".</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </>
+  )
+}

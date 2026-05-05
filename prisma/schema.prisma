@@ -51,6 +51,7 @@ model Commercial {
   alertes           Alerte[]
   contrats          Contrat[]
   factures          Facture[]
+  devis             Devis[]
   createdAt         DateTime             @default(now())
   updatedAt         DateTime             @updatedAt
 }
@@ -99,6 +100,7 @@ model Prospect {
   dateDevis       DateTime?
   opportunites    Opportunite[]
   crv             CRV[]
+  devis           Devis[]
   createdAt       DateTime      @default(now())
   updatedAt       DateTime      @updatedAt
 }
@@ -316,6 +318,62 @@ model Facture {
   dateTraitement DateTime?
   createdAt      DateTime    @default(now())
   updatedAt      DateTime    @updatedAt
+}
+
+model Kit {
+  id           String       @id @default(cuid())
+  nom          String
+  categorie    String       @default("RESIDENTIEL")
+  description  String?
+  puissanceKwc Float?
+  nbPanneaux   Int?
+  marque       String?
+  prixHT       Float        @default(0)
+  tva          Float        @default(10)
+  actif        Boolean      @default(true)
+  lignesDevis  LigneDevis[]
+  createdAt    DateTime     @default(now())
+  updatedAt    DateTime     @updatedAt
+}
+
+model Devis {
+  id               String       @id @default(cuid())
+  commercialId     String
+  commercial       Commercial   @relation(fields: [commercialId], references: [id])
+  prospectId       String?
+  prospect         Prospect?    @relation(fields: [prospectId], references: [id])
+  reference        String       @unique
+  statut           String       @default("BROUILLON")
+  clientNom        String
+  clientEmail      String?
+  clientTelephone  String?
+  clientAdresse    String?
+  clientVille      String?
+  clientCodePostal String?
+  typeClient       String       @default("PARTICULIER")
+  montantHT        Float        @default(0)
+  montantTTC       Float        @default(0)
+  dateDevis        DateTime     @default(now())
+  dateValidite     DateTime?
+  notes            String?
+  lignes           LigneDevis[]
+  createdAt        DateTime     @default(now())
+  updatedAt        DateTime     @updatedAt
+}
+
+model LigneDevis {
+  id             String  @id @default(cuid())
+  devisId        String
+  devis          Devis   @relation(fields: [devisId], references: [id], onDelete: Cascade)
+  kitId          String?
+  kit            Kit?    @relation(fields: [kitId], references: [id])
+  designation    String
+  description    String?
+  quantite       Float   @default(1)
+  prixUnitaireHT Float   @default(0)
+  tva            Float   @default(10)
+  totalHT        Float   @default(0)
+  ordre          Int     @default(0)
 }
 
 model DocumentLibrairie {
