@@ -21,15 +21,20 @@ export async function GET(req: NextRequest) {
     { clientVille: { contains: search } },
   ]
 
-  const devis = await prisma.devis.findMany({
-    where,
-    include: {
-      commercial: { select: { nom: true, prenom: true } },
-      lignes: true,
-    },
-    orderBy: { createdAt: 'desc' },
-  })
-  return NextResponse.json(devis)
+  try {
+    const devis = await prisma.devis.findMany({
+      where,
+      include: {
+        commercial: { select: { nom: true, prenom: true } },
+        lignes: true,
+      },
+      orderBy: { createdAt: 'desc' },
+    })
+    return NextResponse.json(devis)
+  } catch (e: any) {
+    console.error('[GET /api/devis]', e)
+    return NextResponse.json({ error: e.message || String(e) }, { status: 500 })
+  }
 }
 
 export async function POST(req: NextRequest) {
