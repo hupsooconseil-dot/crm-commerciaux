@@ -166,7 +166,7 @@ export default function NouveauDevisPage() {
     const res = await fetch('/api/devis', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) })
     const data = await res.json()
     setSaving(false)
-    if (res.ok) router.push(`/devis/${data.id}`)
+    if (res.ok) router.push(`/devis/${data.id}?pdf=1`)
   }
 
   return (

@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useState, useRef } from 'react'
-import { useParams, useRouter } from 'next/navigation'
+import { useParams, useRouter, useSearchParams } from 'next/navigation'
 import Link from 'next/link'
 import { formatCurrency, formatDate } from '@/app/lib/utils'
 
@@ -80,6 +80,7 @@ function calcTTC(ht: number, tva: number) { return ht * (1 + tva / 100) }
 export default function DevisDetailPage() {
   const { id } = useParams<{ id: string }>()
   const router = useRouter()
+  const searchParams = useSearchParams()
   const printRef = useRef<HTMLDivElement>(null)
 
   const [devis, setDevis] = useState<Devis | null>(null)
@@ -96,6 +97,12 @@ export default function DevisDetailPage() {
       setLoading(false)
     })
   }, [id])
+
+  useEffect(() => {
+    if (!loading && devis && searchParams.get('pdf') === '1') {
+      downloadPDF()
+    }
+  }, [loading, devis])
 
   async function updateStatut() {
     if (!devis) return
@@ -192,14 +199,18 @@ export default function DevisDetailPage() {
           </div>
         </div>
 
-        {/* Bouton PDF bien visible */}
-        <div className="no-print mb-4 flex gap-3">
+        {/* Bandeau PDF */}
+        <div className="no-print mb-5 bg-blue-50 border border-blue-200 rounded-xl p-4 flex flex-col sm:flex-row items-center justify-between gap-3">
+          <div>
+            <p className="font-semibold text-blue-900 text-sm">Devis prêt — Téléchargez le PDF client</p>
+            <p className="text-xs text-blue-600 mt-0.5">Le document inclut toutes les lignes, montants, aides et CGV</p>
+          </div>
           <button onClick={downloadPDF} disabled={generatingPDF}
-            className="flex items-center gap-2 px-5 py-3 bg-blue-600 text-white rounded-xl text-sm font-semibold hover:bg-blue-700 disabled:opacity-60 shadow">
+            className="flex items-center gap-2 px-6 py-3 bg-blue-600 text-white rounded-lg font-semibold text-sm hover:bg-blue-700 disabled:opacity-60 shadow whitespace-nowrap w-full sm:w-auto justify-center">
             {generatingPDF ? (
               <><svg className="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"/><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"/></svg>Génération en cours...</>
             ) : (
-              <><svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3M3 17V7a2 2 0 012-2h6l2 2h6a2 2 0 012 2v8a2 2 0 01-2 2H5a2 2 0 01-2-2z"/></svg>Télécharger le devis en PDF</>
+              <><svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3M3 17V7a2 2 0 012-2h6l2 2h6a2 2 0 012 2v8a2 2 0 01-2 2H5a2 2 0 01-2-2z"/></svg>⬇ Télécharger le PDF</>
             )}
           </button>
         </div>
