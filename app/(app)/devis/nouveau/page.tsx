@@ -154,7 +154,6 @@ export default function NouveauDevisPage() {
 
   async function save(statut: string) {
     if (!form.clientNom) { alert('Le nom du client est requis'); return }
-    if (lignes.length === 0) { alert('Ajoutez au moins une ligne'); return }
     setSaving(true)
     const payload = {
       ...form,
@@ -510,21 +509,36 @@ export default function NouveauDevisPage() {
 
             <div className="mt-5 space-y-2">
               <button onClick={() => save('BROUILLON')} disabled={saving}
-                className="w-full px-4 py-2.5 bg-gray-100 text-gray-700 rounded-lg text-sm font-medium hover:bg-gray-200 disabled:opacity-50">
-                {saving ? 'Enregistrement...' : 'Enregistrer brouillon'}
+                className="w-full px-4 py-3 bg-green-600 text-white rounded-lg text-sm font-semibold hover:bg-green-700 disabled:opacity-50 flex items-center justify-center gap-2">
+                {saving ? (
+                  <><svg className="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"/><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"/></svg>Enregistrement...</>
+                ) : '✓ Valider et enregistrer le devis'}
               </button>
               <button onClick={() => save('ENVOYE')} disabled={saving}
                 className="w-full px-4 py-2.5 bg-blue-600 text-white rounded-lg text-sm font-medium hover:bg-blue-700 disabled:opacity-50">
-                {saving ? 'Enregistrement...' : 'Marquer comme envoyé'}
+                {saving ? 'Enregistrement...' : 'Valider et marquer comme envoyé'}
               </button>
             </div>
-
-            {lignes.length === 0 && (
-              <p className="text-xs text-gray-400 text-center mt-3">Ajoutez au moins une ligne</p>
-            )}
           </div>
         </div>
       </div>
+
+      {/* Barre fixe en bas — toujours visible */}
+      <div className="fixed bottom-0 left-0 right-0 z-40 bg-white border-t border-gray-200 shadow-lg px-4 py-3 flex gap-3 justify-end lg:pl-64">
+        <button onClick={() => save('BROUILLON')} disabled={saving}
+          className="flex items-center gap-2 px-6 py-3 bg-green-600 text-white rounded-lg font-semibold text-sm hover:bg-green-700 disabled:opacity-50">
+          {saving ? (
+            <><svg className="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"/><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"/></svg>Enregistrement...</>
+          ) : '✓ Valider le devis'}
+        </button>
+        <button onClick={() => save('ENVOYE')} disabled={saving}
+          className="px-6 py-3 bg-blue-600 text-white rounded-lg font-semibold text-sm hover:bg-blue-700 disabled:opacity-50">
+          {saving ? '...' : 'Valider + Envoyé'}
+        </button>
+      </div>
+
+      {/* Padding bas pour que le contenu ne soit pas caché par la barre fixe */}
+      <div className="h-20" />
     </div>
   )
 }
