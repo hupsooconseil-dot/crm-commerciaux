@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import { useRouter } from 'next/navigation'
+import { useRouter, useSearchParams } from 'next/navigation'
 import Link from 'next/link'
 import { useSession } from '@/app/components/SessionContext'
 import { formatCurrency, formatDate, statutColor } from '@/app/lib/utils'
@@ -14,6 +14,8 @@ const STATUT_LABELS: Record<string, string> = {
 export default function DevisPage() {
   const session = useSession()
   const router = useRouter()
+  const searchParams = useSearchParams()
+  const nouveauId = searchParams.get('nouveau')
   const [devis, setDevis] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
@@ -55,6 +57,24 @@ export default function DevisPage() {
 
   return (
     <div className="p-4 md:p-6">
+      {nouveauId && (
+        <div className="mb-4 bg-green-50 border border-green-200 rounded-xl p-4 flex items-center justify-between gap-3">
+          <div className="flex items-center gap-2">
+            <span className="text-green-600 text-lg">✓</span>
+            <div>
+              <p className="font-semibold text-green-800 text-sm">Devis enregistré avec succès !</p>
+              <p className="text-xs text-green-600">Il apparaît en tête de liste ci-dessous.</p>
+            </div>
+          </div>
+          <Link href={`/devis/${nouveauId}?pdf=1`}
+            className="flex items-center gap-1.5 px-4 py-2 bg-blue-600 text-white rounded-lg text-sm font-semibold hover:bg-blue-700 whitespace-nowrap">
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3M3 17V7a2 2 0 012-2h6l2 2h6a2 2 0 012 2v8a2 2 0 01-2 2H5a2 2 0 01-2-2z" />
+            </svg>
+            Télécharger le PDF
+          </Link>
+        </div>
+      )}
       <div className="flex flex-wrap items-center justify-between gap-3 mb-6">
         <div>
           <h1 className="text-xl font-bold text-gray-900">Devis</h1>
@@ -130,8 +150,8 @@ export default function DevisPage() {
                   </Link>
                 </td></tr>
               ) : devis.map(d => (
-                <tr key={d.id} className="hover:bg-gray-50 cursor-pointer" onClick={() => router.push(`/devis/${d.id}`)}>
-                  <td className="px-4 py-3 font-mono text-xs text-blue-600 font-semibold">{d.reference}</td>
+                <tr key={d.id} className={`hover:bg-gray-50 cursor-pointer ${d.id === nouveauId ? 'bg-green-50 border-l-4 border-green-400' : ''}`} onClick={() => router.push(`/devis/${d.id}`)}>
+                  <td className="px-4 py-3 font-mono text-xs text-blue-600 font-semibold">{d.reference}{d.id === nouveauId && <span className="ml-1 text-green-600 text-xs font-normal">● nouveau</span>}</td>
                   <td className="px-4 py-3">
                     <p className="font-medium text-gray-900">{d.clientNom}</p>
                     {d.clientVille && <p className="text-xs text-gray-400">{d.clientVille}</p>}
