@@ -67,6 +67,7 @@ export default function NouveauDevisPage() {
 
   const [form, setForm] = useState({
     prospectId: '',
+    clientPrenom: '',
     clientNom: '',
     clientEmail: '',
     clientTelephone: '',
@@ -97,6 +98,7 @@ export default function NouveauDevisPage() {
     setForm(f => ({
       ...f,
       prospectId: id,
+      clientPrenom: p.contactPrenom || '',
       clientNom: p.contactNom || p.raisonSociale,
       clientEmail: p.email || '',
       clientTelephone: p.telephone || '',
@@ -198,14 +200,23 @@ export default function NouveauDevisPage() {
 
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-xs font-medium text-gray-600 mb-1">Nom / Société *</label>
-                  <input type="text" value={form.clientNom} onChange={e => setForm(f => ({ ...f, clientNom: e.target.value }))}
+                  <label className="block text-xs font-medium text-gray-600 mb-1">Prénom</label>
+                  <input type="text" value={form.clientPrenom} onChange={e => setForm(f => ({ ...f, clientPrenom: e.target.value }))}
+                    placeholder="Prénom du contact"
                     className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" />
                 </div>
                 <div>
+                  <label className="block text-xs font-medium text-gray-600 mb-1">Nom / Société *</label>
+                  <input type="text" value={form.clientNom} onChange={e => setForm(f => ({ ...f, clientNom: e.target.value }))}
+                    placeholder="Nom ou raison sociale"
+                    className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" />
+                </div>
+              </div>
+              <div className="grid grid-cols-2 gap-3">
+                <div className="col-span-2">
                   <label className="block text-xs font-medium text-gray-600 mb-1">Type</label>
                   <select value={form.typeClient} onChange={e => setForm(f => ({ ...f, typeClient: e.target.value }))}
-                    className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white">
+                    className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white col-span-2">
                     <option value="PARTICULIER">Particulier</option>
                     <option value="PROFESSIONNEL">Professionnel</option>
                   </select>

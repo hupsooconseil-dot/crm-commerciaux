@@ -26,7 +26,7 @@ export default function ContratsPage() {
   const [filterStatut, setFilterStatut] = useState('')
   const [showForm, setShowForm] = useState(false)
   const [form, setForm] = useState({
-    clientNom: '', clientEmail: '', clientTelephone: '',
+    clientPrenom: '', clientNom: '', clientEmail: '', clientTelephone: '',
     produit: '', montant: '', tauxCommission: '5',
     statut: 'ACTIF', dateSignature: '', dateDebut: '', dateFin: ''
   })
@@ -124,7 +124,7 @@ export default function ContratsPage() {
                   <tr key={c.id} className="hover:bg-gray-50 cursor-pointer" onClick={() => router.push(`/contrats/${c.id}`)}>
                     <td className="px-4 py-3 font-mono text-xs text-blue-600 font-semibold">{c.reference}</td>
                     <td className="px-4 py-3">
-                      <p className="font-medium text-gray-900">{c.clientNom}</p>
+                      <p className="font-medium text-gray-900">{[c.clientPrenom, c.clientNom].filter(Boolean).join(' ')}</p>
                       {c.clientEmail && <p className="text-xs text-gray-400">{c.clientEmail}</p>}
                     </td>
                     <td className="px-4 py-3 text-gray-500 hidden md:table-cell">{c.produit || '-'}</td>
@@ -164,9 +164,16 @@ export default function ContratsPage() {
             </div>
             <form onSubmit={handleSubmit} className="p-5 space-y-4">
               <div className="grid grid-cols-2 gap-3">
-                <div className="col-span-2">
-                  <label className="block text-xs font-medium text-gray-700 mb-1">Nom client *</label>
+                <div>
+                  <label className="block text-xs font-medium text-gray-700 mb-1">Prénom client</label>
+                  <input value={form.clientPrenom} onChange={e => setForm({...form, clientPrenom: e.target.value})}
+                    placeholder="Prénom"
+                    className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" />
+                </div>
+                <div>
+                  <label className="block text-xs font-medium text-gray-700 mb-1">Nom / Société *</label>
                   <input required value={form.clientNom} onChange={e => setForm({...form, clientNom: e.target.value})}
+                    placeholder="Nom ou raison sociale"
                     className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" />
                 </div>
                 <div>

@@ -134,6 +134,7 @@ model Contrat {
   opportuniteId   String?
   opportunite     Opportunite? @relation(fields: [opportuniteId], references: [id])
   reference       String       @unique
+  clientPrenom    String?
   clientNom       String
   clientEmail     String?
   clientTelephone String?
@@ -344,6 +345,7 @@ model Devis {
   prospect         Prospect?    @relation(fields: [prospectId], references: [id])
   reference        String       @unique
   statut           String       @default("BROUILLON")
+  clientPrenom     String?
   clientNom        String
   clientEmail      String?
   clientTelephone  String?
