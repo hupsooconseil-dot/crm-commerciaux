@@ -63,6 +63,7 @@ export default function NouveauDevisPage() {
   const [prospects, setProspects] = useState<Prospect[]>([])
   const [lignes, setLignes] = useState<Ligne[]>([])
   const [saving, setSaving] = useState(false)
+  const [saveError, setSaveError] = useState('')
   const [activeTab, setActiveTab] = useState<'kits' | 'manuel'>('kits')
   const [filterCat, setFilterCat] = useState('')
 
@@ -153,8 +154,9 @@ export default function NouveauDevisPage() {
   const filteredKits = filterCat ? kits.filter(k => k.categorie === filterCat) : kits
 
   async function save(statut: string) {
-    if (!form.clientNom) { alert('Le nom du client est requis'); return }
+    if (!form.clientNom) { setSaveError('Le nom du client est requis'); return }
     setSaving(true)
+    setSaveError('')
     const payload = {
       ...form,
       statut,
@@ -162,10 +164,19 @@ export default function NouveauDevisPage() {
       montantTTC,
       lignes: lignes.map((l, i) => ({ ...l, ordre: i })),
     }
-    const res = await fetch('/api/devis', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) })
-    const data = await res.json()
-    setSaving(false)
-    if (res.ok) router.push(`/devis?nouveau=${data.id}`)
+    try {
+      const res = await fetch('/api/devis', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) })
+      const data = await res.json()
+      setSaving(false)
+      if (res.ok) {
+        router.push(`/devis?nouveau=${data.id}`)
+      } else {
+        setSaveError(`Erreur ${res.status} : ${data.error || 'Impossible de créer le devis'}`)
+      }
+    } catch (e: any) {
+      setSaving(false)
+      setSaveError(`Erreur réseau : ${e.message}`)
+    }
   }
 
   return (
@@ -524,17 +535,24 @@ export default function NouveauDevisPage() {
       </div>
 
       {/* Barre fixe en bas — toujours visible */}
-      <div className="fixed bottom-0 left-0 right-0 z-40 bg-white border-t border-gray-200 shadow-lg px-4 py-3 flex gap-3 justify-end lg:pl-64">
-        <button onClick={() => save('BROUILLON')} disabled={saving}
-          className="flex items-center gap-2 px-6 py-3 bg-green-600 text-white rounded-lg font-semibold text-sm hover:bg-green-700 disabled:opacity-50">
-          {saving ? (
-            <><svg className="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"/><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"/></svg>Enregistrement...</>
-          ) : '✓ Valider le devis'}
-        </button>
-        <button onClick={() => save('ENVOYE')} disabled={saving}
-          className="px-6 py-3 bg-blue-600 text-white rounded-lg font-semibold text-sm hover:bg-blue-700 disabled:opacity-50">
-          {saving ? '...' : 'Valider + Envoyé'}
-        </button>
+      <div className="fixed bottom-0 left-0 right-0 z-40 bg-white border-t border-gray-200 shadow-lg px-4 py-3 flex flex-col gap-2 lg:pl-64">
+        {saveError && (
+          <div className="bg-red-50 border border-red-200 rounded-lg px-4 py-2 text-red-700 text-sm font-medium">
+            ⚠ {saveError}
+          </div>
+        )}
+        <div className="flex gap-3 justify-end">
+          <button onClick={() => save('BROUILLON')} disabled={saving}
+            className="flex items-center gap-2 px-6 py-3 bg-green-600 text-white rounded-lg font-semibold text-sm hover:bg-green-700 disabled:opacity-50">
+            {saving ? (
+              <><svg className="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"/><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"/></svg>Enregistrement...</>
+            ) : '✓ Valider le devis'}
+          </button>
+          <button onClick={() => save('ENVOYE')} disabled={saving}
+            className="px-6 py-3 bg-blue-600 text-white rounded-lg font-semibold text-sm hover:bg-blue-700 disabled:opacity-50">
+            {saving ? '...' : 'Valider + Envoyé'}
+          </button>
+        </div>
       </div>
 
       {/* Padding bas pour que le contenu ne soit pas caché par la barre fixe */}

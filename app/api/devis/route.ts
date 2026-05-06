@@ -41,12 +41,13 @@ export async function POST(req: NextRequest) {
   const commercialId = req.headers.get('x-commercial-id')
   const role = req.headers.get('x-user-role')
   try {
-    const { lignes, ...data } = await req.json()
+    const { lignes, prospectId, commercialId: _cid, ...data } = await req.json()
     const devis = await prisma.devis.create({
       data: {
         ...data,
         reference: data.reference || genRef(),
-        commercialId: role === 'COMMERCIAL' ? commercialId! : data.commercialId || commercialId,
+        commercialId: role === 'COMMERCIAL' ? commercialId! : _cid || commercialId || '',
+        prospectId: prospectId || null,
         lignes: lignes?.length ? {
           create: lignes.map((l: any, i: number) => ({ ...l, ordre: i }))
         } : undefined,
