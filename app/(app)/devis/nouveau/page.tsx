@@ -31,6 +31,7 @@ interface Prospect {
   id: string
   raisonSociale: string
   contactNom: string | null
+  contactPrenom: string | null
   email: string | null
   telephone: string | null
   ville: string | null
