@@ -40,18 +40,22 @@ export async function GET(req: NextRequest) {
 export async function POST(req: NextRequest) {
   const commercialId = req.headers.get('x-commercial-id')
   const role = req.headers.get('x-user-role')
-  const { lignes, ...data } = await req.json()
-
-  const devis = await prisma.devis.create({
-    data: {
-      ...data,
-      reference: data.reference || genRef(),
-      commercialId: role === 'COMMERCIAL' ? commercialId! : data.commercialId || commercialId,
-      lignes: lignes ? {
-        create: lignes.map((l: any, i: number) => ({ ...l, ordre: i }))
-      } : undefined,
-    },
-    include: { lignes: true },
-  })
-  return NextResponse.json(devis, { status: 201 })
+  try {
+    const { lignes, ...data } = await req.json()
+    const devis = await prisma.devis.create({
+      data: {
+        ...data,
+        reference: data.reference || genRef(),
+        commercialId: role === 'COMMERCIAL' ? commercialId! : data.commercialId || commercialId,
+        lignes: lignes?.length ? {
+          create: lignes.map((l: any, i: number) => ({ ...l, ordre: i }))
+        } : undefined,
+      },
+      include: { lignes: true },
+    })
+    return NextResponse.json(devis, { status: 201 })
+  } catch (e: any) {
+    console.error('[POST /api/devis]', e)
+    return NextResponse.json({ error: e.message || String(e) }, { status: 500 })
+  }
 }
