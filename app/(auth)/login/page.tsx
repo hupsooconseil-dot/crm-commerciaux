@@ -94,24 +94,6 @@ export default function LoginPage() {
             </button>
           </form>
 
-          <div className="mt-6 p-4 bg-gray-50 rounded-xl text-sm text-gray-500">
-            <p className="font-medium text-gray-700 mb-2">Accès démo :</p>
-            <p>Admin : <code className="text-blue-600">admin@crm.fr</code> / <code className="text-blue-600">Admin2024!</code></p>
-            <p>Commercial : <code className="text-blue-600">commercial1@crm.fr</code> / <code className="text-blue-600">Pass2024!</code></p>
-            <p className="mt-2 text-xs text-gray-400">
-              Si première connexion,{' '}
-              <button
-                className="text-blue-500 underline"
-                onClick={async () => {
-                  const r = await fetch('/api/seed', { method: 'POST' })
-                  const d = await r.json()
-                  alert(d.message || d.error)
-                }}
-              >
-                initialiser la base
-              </button>
-            </p>
-          </div>
         </div>
       </div>
     </div>
