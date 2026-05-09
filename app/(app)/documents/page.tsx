@@ -29,6 +29,9 @@ export default function DocumentsPage() {
     dateDocument: '', dateExpiration: '', dateReception: new Date().toISOString().slice(0, 10)
   })
   const [saving, setSaving] = useState(false)
+  const [uploading, setUploading] = useState(false)
+  const [saveError, setSaveError] = useState('')
+  const [fichierUrl, setFichierUrl] = useState('')
 
   const load = () => {
     const params = new URLSearchParams()
@@ -41,22 +44,48 @@ export default function DocumentsPage() {
 
   useEffect(() => { load() }, [filterType, filterStatut])
 
+  async function handleFileChange(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0]
+    if (!file) return
+    setUploading(true)
+    setSaveError('')
+    const fd = new FormData()
+    fd.append('file', file)
+    const res = await fetch('/api/upload', { method: 'POST', body: fd })
+    const data = await res.json()
+    setUploading(false)
+    if (res.ok) {
+      setFichierUrl(data.url)
+    } else {
+      setSaveError('Erreur upload : ' + (data.error || 'inconnu'))
+    }
+  }
+
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
     setSaving(true)
-    await fetch('/api/documents', {
+    setSaveError('')
+    const res = await fetch('/api/documents', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         ...form,
+        fichierUrl: fichierUrl || null,
         dateDocument: form.dateDocument ? new Date(form.dateDocument).toISOString() : null,
         dateExpiration: form.dateExpiration ? new Date(form.dateExpiration).toISOString() : null,
         dateReception: form.dateReception ? new Date(form.dateReception).toISOString() : null,
       }),
     })
-    setShowForm(false)
     setSaving(false)
-    load()
+    if (res.ok) {
+      setShowForm(false)
+      setFichierUrl('')
+      setSaveError('')
+      load()
+    } else {
+      const d = await res.json()
+      setSaveError('Erreur : ' + (d.error || 'impossible de sauvegarder'))
+    }
   }
 
   async function updateStatut(id: string, statut: string) {
@@ -178,6 +207,12 @@ export default function DocumentsPage() {
                       </td>
                       <td className="px-4 py-3">
                         <div className="flex items-center gap-2">
+                          {d.fichierUrl && (
+                            <a href={d.fichierUrl} target="_blank" rel="noopener noreferrer"
+                              className="text-xs px-2 py-1 bg-blue-50 text-blue-700 rounded hover:bg-blue-100 font-medium whitespace-nowrap">
+                              📄 Ouvrir
+                            </a>
+                          )}
                           {(session?.role === 'ADMIN' || session?.role === 'MANAGER') && (
                             <select
                               value={d.statut}
@@ -245,10 +280,21 @@ export default function DocumentsPage() {
                 <input value={form.description} onChange={e => setForm({...form, description: e.target.value})}
                   className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" />
               </div>
+              <div>
+                <label className="block text-xs font-medium text-gray-700 mb-1">Fichier (PDF, image...)</label>
+                <input type="file" accept=".pdf,.jpg,.jpeg,.png,.doc,.docx,.xls,.xlsx"
+                  onChange={handleFileChange} disabled={uploading}
+                  className="w-full text-sm text-gray-600 file:mr-3 file:py-2 file:px-3 file:rounded-lg file:border-0 file:bg-blue-50 file:text-blue-700 file:font-medium hover:file:bg-blue-100" />
+                {uploading && <p className="text-xs text-blue-500 mt-1">Envoi en cours...</p>}
+                {fichierUrl && <p className="text-xs text-green-600 mt-1">✓ Fichier chargé avec succès</p>}
+              </div>
+              {saveError && (
+                <div className="bg-red-50 border border-red-200 rounded-lg p-3 text-xs text-red-700">⚠ {saveError}</div>
+              )}
               <div className="flex gap-3">
-                <button type="button" onClick={() => setShowForm(false)}
+                <button type="button" onClick={() => { setShowForm(false); setFichierUrl(''); setSaveError('') }}
                   className="flex-1 py-2 border border-gray-200 rounded-lg text-sm font-medium">Annuler</button>
-                <button type="submit" disabled={saving}
+                <button type="submit" disabled={saving || uploading}
                   className="flex-1 py-2 bg-blue-600 text-white rounded-lg text-sm font-medium hover:bg-blue-700 disabled:bg-blue-400">
                   {saving ? 'Enregistrement...' : 'Ajouter'}
                 </button>

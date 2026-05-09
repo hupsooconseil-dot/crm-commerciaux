@@ -25,13 +25,17 @@ export async function GET(req: NextRequest) {
 export async function POST(req: NextRequest) {
   const commercialId = req.headers.get('x-commercial-id')
   const role = req.headers.get('x-user-role')
-  const data = await req.json()
-
-  const document = await prisma.document.create({
-    data: {
-      ...data,
-      commercialId: role === 'COMMERCIAL' ? commercialId! : data.commercialId,
-    },
-  })
-  return NextResponse.json(document, { status: 201 })
+  try {
+    const data = await req.json()
+    const document = await prisma.document.create({
+      data: {
+        ...data,
+        commercialId: data.commercialId || commercialId || '',
+      },
+    })
+    return NextResponse.json(document, { status: 201 })
+  } catch (e: any) {
+    console.error('[POST /api/documents]', e)
+    return NextResponse.json({ error: e.message || String(e) }, { status: 500 })
+  }
 }
